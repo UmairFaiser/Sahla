@@ -3,9 +3,6 @@ import { EnterForm } from "@/components/enter-form";
 export default function EnterPage() {
   return (
     <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-6 py-16">
-      <p className="text-xs font-medium tracking-[0.18em] text-gray-1100 uppercase animate-[fadeInUp_220ms_cubic-bezier(0.2,0,0,1)_both]">
-        Sahla
-      </p>
       <h1 className="mt-4 font-serif text-4xl leading-tight text-balance text-gray-1200 animate-[fadeInUp_220ms_cubic-bezier(0.2,0,0,1)_both] [animation-delay:90ms]">
         Date of birth of Umair
       </h1>
