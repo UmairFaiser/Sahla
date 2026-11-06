@@ -55,7 +55,7 @@ function Field({
         autoComplete="off"
         maxLength={maxLength}
         autoFocus={autoFocus}
-        className="h-14 rounded-2xl bg-gray-100 px-3 text-center font-serif text-2xl text-gray-1200 shadow-border outline-none transition-[box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] focus:shadow-custom tabular-nums"
+        className="h-14 w-full min-w-0 rounded-2xl bg-gray-100 px-2 text-center font-serif text-xl text-gray-1200 shadow-border outline-none transition-[box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] focus:shadow-custom tabular-nums sm:px-3 sm:text-2xl"
       />
     </label>
   );

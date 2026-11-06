@@ -29,7 +29,7 @@ export function Replies({ replies }: { replies: Reply[] }) {
           >
             {formatStamp(reply.created_at)}
           </time>
-          <p className="mt-1 text-[0.975rem] leading-7 text-pretty text-gray-1200">
+          <p className="mt-1 break-words text-[0.975rem] leading-7 text-pretty text-gray-1200">
             {reply.body}
           </p>
         </li>

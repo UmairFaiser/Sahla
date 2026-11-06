@@ -66,7 +66,7 @@ async function Blog() {
   const list = replies ?? [];
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 py-16 sm:py-24">
+    <main className="mx-auto w-full min-w-0 max-w-2xl overflow-x-clip px-4 py-12 sm:px-6 sm:py-24">
       {tablesMissing || replyError ? (
         <p className="mt-6 rounded-2xl bg-amber-100 px-4 py-3 text-sm leading-6 text-gray-1200">
           {replyError?.message ??
@@ -79,7 +79,7 @@ async function Blog() {
       >
         {formatDay(resolvedPost.created_at)}
       </time>
-      <h1 className="mt-3 font-serif text-4xl leading-[1.15] text-balance text-gray-1200 sm:text-5xl">
+      <h1 className="mt-3 font-serif text-[1.85rem] leading-[1.15] break-words text-balance text-gray-1200 sm:text-4xl md:text-5xl">
         {resolvedPost.title}
       </h1>
       <p className="mt-4 mb-10 text-sm text-gray-1100">
@@ -95,7 +95,7 @@ async function Blog() {
         <div className="mt-6">
           <Replies replies={list} />
         </div>
-        <div className="mt-10 rounded-[28px] bg-white p-5 shadow-custom">
+        <div className="mt-10 min-w-0 rounded-[28px] bg-white p-4 sm:p-5 shadow-custom">
           <p className="mb-4 text-sm text-gray-1100">You can type you replies here Sahla</p>
           <ReplyForm postId={resolvedPost.id} />
         </div>

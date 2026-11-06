@@ -18,6 +18,8 @@ type Anchor = {
   placeBelow: boolean;
   lineTop: number;
   lineBottom: number;
+  lineLeft: number;
+  lineWidth: number;
 };
 
 type SelectionTip = Anchor & {
@@ -44,18 +46,56 @@ function coveringIds(start: number, end: number, replies: Reply[]) {
     .map((reply) => reply.id);
 }
 
-function clampLeft(left: number) {
-  return Math.min(Math.max(left, 24), window.innerWidth - 24);
+function viewportWidth() {
+  return window.visualViewport?.width ?? window.innerWidth;
 }
 
-function anchorFromRect(rect: DOMRect): Anchor {
-  const placeBelow = rect.top < 280;
+function isCoarsePointer() {
+  return (
+    window.matchMedia("(hover: none), (pointer: coarse)").matches ||
+    window.innerWidth < 640
+  );
+}
+
+function anchorFromRect(rect: DOMRect, expanded = false): Anchor {
+  const vw = viewportWidth();
+  const margin = 8;
+  const boxWidth = Math.min(expanded ? 320 : 112, vw - margin * 2);
+  const preferBelow = isCoarsePointer() || rect.top < 140;
+  let left = rect.left + rect.width / 2 - boxWidth / 2;
+  left = Math.max(margin, Math.min(left, vw - boxWidth - margin));
+
   return {
-    top: placeBelow ? rect.bottom + 10 : rect.top - 10,
-    left: clampLeft(rect.left + rect.width / 2),
-    placeBelow,
+    top: preferBelow ? rect.bottom + 10 : rect.top - 10,
+    left,
+    placeBelow: preferBelow,
     lineTop: rect.top,
     lineBottom: rect.bottom,
+    lineLeft: rect.left,
+    lineWidth: rect.width,
+  };
+}
+
+function readArticleSelection(root: HTMLElement) {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null;
+
+  const range = sel.getRangeAt(0);
+  if (!root.contains(range.commonAncestorContainer)) return null;
+
+  const pre = document.createRange();
+  pre.selectNodeContents(root);
+  pre.setEnd(range.startContainer, range.startOffset);
+  const start = pre.toString().length;
+  const raw = range.toString();
+  const text = raw.replace(/\s+/g, " ").trim();
+  if (text.length < 2) return null;
+
+  return {
+    text,
+    start,
+    end: start + raw.length,
+    rect: range.getBoundingClientRect(),
   };
 }
 
@@ -64,8 +104,11 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
   const selectionRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<number | null>(null);
+  const expandedRef = useRef(false);
   const [selection, setSelection] = useState<SelectionTip | null>(null);
   const [view, setView] = useState<ViewTip | null>(null);
+
+  expandedRef.current = Boolean(selection?.expanded);
 
   const highlightReplies = useMemo(
     () =>
@@ -100,17 +143,57 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
   }, []);
 
   useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    let timer = 0;
+    const capture = () => {
+      if (expandedRef.current) return;
+      const next = readArticleSelection(root);
+      if (!next) {
+        setSelection((current) => (current?.expanded ? current : null));
+        return;
+      }
+
+      setView(null);
+      setSelection({
+        text: next.text,
+        start: next.start,
+        end: next.end,
+        expanded: false,
+        ...anchorFromRect(next.rect),
+      });
+    };
+
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(capture, 90);
+    };
+
+    document.addEventListener("selectionchange", schedule);
+    document.addEventListener("mouseup", schedule);
+    document.addEventListener("touchend", schedule, { passive: true });
+
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
       if (target.closest("[data-selection-ui]")) return;
       if (target.closest("[data-view-ui]")) return;
       if (target.closest("mark[data-highlight]")) return;
-      setSelection(null);
+      if (target.closest("textarea, input, button")) return;
+      if (event.pointerType === "touch") return;
+      setSelection((current) => (current?.expanded ? null : current));
     };
 
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("selectionchange", schedule);
+      document.removeEventListener("mouseup", schedule);
+      document.removeEventListener("touchend", schedule);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
   }, []);
 
   useEffect(() => () => clearHideTimer(), []);
@@ -147,45 +230,15 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
     }
   }, [view]);
 
-  const onMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest("mark[data-highlight]")) return;
-
-    const root = rootRef.current;
-    const sel = window.getSelection();
-    if (!root || !sel || sel.isCollapsed || sel.rangeCount === 0) return;
-
-    const range = sel.getRangeAt(0);
-    if (!root.contains(range.commonAncestorContainer)) return;
-
-    const pre = document.createRange();
-    pre.selectNodeContents(root);
-    pre.setEnd(range.startContainer, range.startOffset);
-    const start = pre.toString().length;
-    const raw = range.toString();
-    const text = raw.replace(/\s+/g, " ").trim();
-    if (text.length < 2) return;
-
-    setView(null);
-    setSelection({
-      text,
-      start,
-      end: start + raw.length,
-      expanded: false,
-      ...anchorFromRect(range.getBoundingClientRect()),
-    });
-  };
-
   const viewReplies = view
     ? replies.filter((reply) => view.ids.includes(reply.id))
     : [];
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 max-w-full">
       <div
         ref={rootRef}
-        onMouseUp={onMouseUp}
-        className="article-body whitespace-pre-wrap text-[1.125rem] tracking-tight leading-8 text-pretty text-gray-paragraph"
+        className="article-body max-w-full break-words whitespace-pre-wrap text-[1.125rem] tracking-tight leading-8 text-pretty text-gray-paragraph"
       >
         <MarkedText
           text={post.body}
@@ -193,14 +246,20 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
           replies={highlightReplies}
           lockedIds={view?.locked ? view.ids : null}
           onHover={(ids, rect) => {
+            if (isCoarsePointer()) return;
             if (view?.locked) return;
             showView(ids, rect, false);
           }}
           onLeave={() => {
+            if (isCoarsePointer()) return;
             if (view?.locked) return;
             closeViewIfUnlocked();
           }}
-          onLock={(ids, rect) => showView(ids, rect, true)}
+          onLock={(ids, rect) => {
+            const root = rootRef.current;
+            if (root && readArticleSelection(root)) return;
+            showView(ids, rect, true);
+          }}
         />
       </div>
 
@@ -217,11 +276,22 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
             type="button"
             className="highlight-tooltip-trigger"
             tabIndex={selection.expanded ? -1 : 0}
-            onMouseDown={(event) => event.preventDefault()}
+            onPointerDown={(event) => event.preventDefault()}
             onClick={() =>
-              setSelection((current) =>
-                current ? { ...current, expanded: true } : current,
-              )
+              setSelection((current) => {
+                if (!current) return current;
+                const rect = new DOMRect(
+                  current.lineLeft,
+                  current.lineTop,
+                  current.lineWidth,
+                  current.lineBottom - current.lineTop,
+                );
+                return {
+                  ...current,
+                  expanded: true,
+                  ...anchorFromRect(rect, true),
+                };
+              })
             }
           >
             Reply
@@ -254,8 +324,12 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
           data-locked={view.locked ? "true" : "false"}
           data-below={view.placeBelow ? "true" : "false"}
           style={{ top: view.top, left: view.left }}
-          onPointerEnter={clearHideTimer}
+          onPointerEnter={() => {
+            if (isCoarsePointer()) return;
+            clearHideTimer();
+          }}
           onPointerLeave={() => {
+            if (isCoarsePointer()) return;
             if (!view.locked) closeViewIfUnlocked();
           }}
         >
@@ -268,9 +342,8 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
                 type="button"
                 aria-label="Close"
                 onClick={() => setView(null)}
-                className="relative grid size-10 place-items-center rounded-full text-gray-1100 transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-gray-300 active:scale-[0.96]"
+                className="relative grid size-11 place-items-center rounded-full text-gray-1100 transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-gray-300 active:scale-[0.96]"
               >
-                <span className="pointer-events-none absolute inset-0" />
                 <CloseIcon />
               </button>
             ) : null}
@@ -281,7 +354,7 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
                 <p className="text-sm text-gray-1000 tabular-nums">
                   {formatStamp(item.created_at)}
                 </p>
-                <p className="text-sm leading-6 text-pretty text-gray-1100">
+                <p className="text-sm leading-6 break-words text-pretty text-gray-1100">
                   {item.body}
                 </p>
               </li>
@@ -348,7 +421,6 @@ function MarkedText({
         }
         onPointerLeave={onLeave}
         onClick={(event) => {
-          event.preventDefault();
           event.stopPropagation();
           onLock(ids, event.currentTarget.getBoundingClientRect());
         }}

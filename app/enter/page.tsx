@@ -2,7 +2,7 @@ import { EnterForm } from "@/components/enter-form";
 
 export default function EnterPage() {
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-6 py-16">
+    <main className="mx-auto flex min-h-full w-full min-w-0 max-w-md flex-col justify-center overflow-x-clip px-4 py-16 sm:px-6">
       <h1 className="mt-4 font-serif text-4xl leading-tight text-balance text-gray-1200 animate-[fadeInUp_220ms_cubic-bezier(0.2,0,0,1)_both] [animation-delay:90ms]">
         Enter my date of birth
       </h1>

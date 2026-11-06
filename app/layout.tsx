@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
@@ -18,13 +18,18 @@ export const metadata: Metadata = {
   description: "Maybe?",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${instrumentSerif.variable} h-full overflow-x-clip antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-background font-sans text-gray-1200">
+      <body className="min-h-full min-w-0 flex flex-col overflow-x-clip bg-gray-background font-sans text-gray-1200">
         {children}
       </body>
     </html>

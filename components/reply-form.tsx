@@ -72,7 +72,7 @@ export function ReplyForm({
         placeholder={
           quotedText ? "Reply to this line…" : "Reply to the whole piece…"
         }
-        className="resize-y rounded-xl bg-gray-200 px-3.5 py-3 text-sm leading-6 text-gray-1200 shadow-border outline-none transition-[box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] placeholder:text-gray-900 focus:shadow-custom"
+        className="w-full max-w-full resize-y rounded-xl bg-gray-200 px-3.5 py-3 text-sm leading-6 text-gray-1200 shadow-border outline-none transition-[box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] placeholder:text-gray-900 focus:shadow-custom"
       />
 
       {state.error ? (

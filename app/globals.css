@@ -143,6 +143,10 @@
   --color-focus-ring: var(--color-focus-ring);
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   background: var(--color-gray-background);
   color: var(--color-gray-1200);
@@ -152,7 +156,8 @@ body {
     ui-sans-serif,
     system-ui,
     sans-serif;
-  scrollbar-gutter: stable;
+  max-width: 100%;
+  overflow-x: clip;
   font-size-adjust: 0.545;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -161,6 +166,13 @@ body {
     background: oklch(0.85 0.15 260 / 0.4);
     color: var(--color-gray-1200);
   }
+}
+
+.article-body {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 @keyframes fadeInUp {
@@ -178,21 +190,21 @@ body {
 .view-tooltip {
   position: fixed;
   z-index: 30;
-  translate: -50% -100%;
-  transform-origin: center bottom;
+  translate: 0 -100%;
+  transform-origin: left bottom;
   animation: fadeInUp 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
 .highlight-tooltip[data-below="true"],
 .view-tooltip[data-below="true"] {
-  translate: -50% 0;
-  transform-origin: center top;
+  translate: 0 0;
+  transform-origin: left top;
 }
 
 .highlight-tooltip {
   display: grid;
   width: max-content;
-  max-width: min(20rem, calc(100vw - 32px));
+  max-width: min(20rem, calc(100dvw - 16px));
   overflow: hidden;
   border-radius: 999px;
   background: var(--color-gray-1200);
@@ -207,7 +219,7 @@ body {
 }
 
 .highlight-tooltip[data-expanded="true"] {
-  width: min(20rem, calc(100vw - 32px));
+  width: min(20rem, calc(100dvw - 16px));
   padding: 8px;
   border-radius: 20px;
   background: var(--color-gray-100);
@@ -215,7 +227,8 @@ body {
 }
 
 .highlight-tooltip-trigger {
-  height: 40px;
+  height: 44px;
+  min-width: 44px;
   padding: 0 16px;
   border: 0;
   background: transparent;
@@ -261,7 +274,7 @@ body {
 }
 
 .view-tooltip {
-  width: min(20rem, calc(100vw - 32px));
+  width: min(20rem, calc(100dvw - 16px));
   padding: 12px;
   border-radius: 20px;
   background: var(--color-gray-100);
