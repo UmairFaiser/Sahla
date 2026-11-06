@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   COOKIE_NAME,
@@ -38,14 +38,25 @@ export async function unlockSite(
     return { error: "That is not my date of birth. Seriously Sahla? Dont you remember my DOB?" };
   }
 
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, await createGateToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
+  try {
+    const cookieStore = await cookies();
+    const headerList = await headers();
+    const proto = headerList.get("x-forwarded-proto") ?? "http";
+    cookieStore.set(COOKIE_NAME, await createGateToken(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: proto === "https",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not open the page. Try again.",
+    };
+  }
 
   redirect("/");
 }

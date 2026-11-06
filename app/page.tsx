@@ -19,20 +19,34 @@ export default function Home() {
 
 async function Blog() {
   await connection();
-  const supabase = createClient(await cookies());
 
-  const { data: post, error: postError } = await supabase
-    .from("posts")
-    .select("id, slug, title, body, created_at")
-    .eq("slug", "hello")
-    .maybeSingle<Post>();
+  let post: Post | null = null;
+  let postError: { message: string } | null = null;
+  let replies: Reply[] | null = null;
+  let replyError: { message: string } | null = null;
+
+  try {
+    const supabase = createClient(await cookies());
+    const postResult = await supabase
+      .from("posts")
+      .select("id, slug, title, body, created_at")
+      .eq("slug", "hello")
+      .maybeSingle<Post>();
+    post = postResult.data;
+    postError = postResult.error;
+  } catch (error) {
+    postError = {
+      message: error instanceof Error ? error.message : "Database unavailable",
+    };
+  }
 
   const resolvedPost = post ?? FALLBACK_POST;
   const tablesMissing = Boolean(postError) || !post;
 
-  const { data: replies, error: replyError } = tablesMissing
-    ? { data: [] as Reply[], error: null }
-    : await supabase
+  if (!tablesMissing) {
+    try {
+      const supabase = createClient(await cookies());
+      const replyResult = await supabase
         .from("replies")
         .select(
           "id, post_id, author_name, body, quoted_text, start_offset, end_offset, created_at",
@@ -40,23 +54,23 @@ async function Blog() {
         .eq("post_id", resolvedPost.id)
         .order("created_at", { ascending: true })
         .returns<Reply[]>();
-
-  if (replyError) {
-    return <ErrorState message={replyError.message} />;
+      replies = replyResult.data;
+      replyError = replyResult.error;
+    } catch (error) {
+      replyError = {
+        message: error instanceof Error ? error.message : "Database unavailable",
+      };
+    }
   }
 
   const list = replies ?? [];
 
   return (
     <main className="mx-auto w-full max-w-2xl px-6 py-16 sm:py-24">
-      {tablesMissing ? (
+      {tablesMissing || replyError ? (
         <p className="mt-6 rounded-2xl bg-amber-100 px-4 py-3 text-sm leading-6 text-gray-1200">
-          Database is reachable, but the posts/replies tables are not created yet.
-          Open the SQL editor for this project and run{" "}
-          <code className="rounded-md bg-white px-1.5 py-0.5 font-mono text-[0.85em]">
-            supabase/schema.sql
-          </code>
-          .
+          {replyError?.message ??
+            "Database is reachable, but the posts/replies tables are not created yet."}
         </p>
       ) : null}
       <time
@@ -104,13 +118,3 @@ function PageSkeleton() {
   );
 }
 
-function ErrorState({ message }: { message: string }) {
-  return (
-    <main className="mx-auto max-w-xl px-6 py-24">
-      <h1 className="font-serif text-3xl text-gray-1200 text-balance">
-        Couldn’t load the page
-      </h1>
-      <p className="mt-3 text-sm leading-6 text-gray-1100">{message}</p>
-    </main>
-  );
-}
