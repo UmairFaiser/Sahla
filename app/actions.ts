@@ -35,7 +35,7 @@ export async function unlockSite(
   const submitted = normalizeDob(`${day}.${month}.${year}`);
 
   if (submitted !== expectedDob()) {
-    return { error: "That is not my date of birth. Seriously Sahla? You dont remember my DOB?" };
+    return { error: "That is not my date of birth. Seriously Sahla? Dont you remember my DOB?" };
   }
 
   const cookieStore = await cookies();
