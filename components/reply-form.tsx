@@ -63,12 +63,6 @@ export function ReplyForm({
         </blockquote>
       ) : null}
 
-      <input
-        name="authorName"
-        placeholder="Your name (optional)"
-        maxLength={80}
-        className="h-11 rounded-xl bg-gray-200 px-3.5 text-sm text-gray-1200 shadow-border outline-none transition-[box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] placeholder:text-gray-900 focus:shadow-custom"
-      />
       <textarea
         name="body"
         required

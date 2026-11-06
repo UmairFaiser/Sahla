@@ -49,7 +49,7 @@ async function Blog() {
       const replyResult = await supabase
         .from("replies")
         .select(
-          "id, post_id, author_name, body, quoted_text, start_offset, end_offset, created_at",
+          "id, post_id, body, quoted_text, start_offset, end_offset, created_at",
         )
         .eq("post_id", resolvedPost.id)
         .order("created_at", { ascending: true })

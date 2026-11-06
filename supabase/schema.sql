@@ -13,14 +13,12 @@ create table if not exists public.posts (
 create table if not exists public.replies (
   id bigint generated always as identity primary key,
   post_id bigint not null references public.posts (id) on delete cascade,
-  author_name text not null default 'Anonymous',
   body text not null,
   quoted_text text,
   start_offset integer,
   end_offset integer,
   created_at timestamptz not null default now(),
   constraint replies_body_length check (char_length(body) between 1 and 4000),
-  constraint replies_author_length check (char_length(author_name) between 1 and 80),
   constraint replies_quote_range check (
     (
       quoted_text is null
@@ -87,19 +85,13 @@ create policy replies_insert_anon
   on public.replies
   for insert
   to anon
-  with check (
-    char_length(body) between 1 and 4000
-    and char_length(author_name) between 1 and 80
-  );
+  with check (char_length(body) between 1 and 4000);
 
 create policy replies_insert_authenticated
   on public.replies
   for insert
   to authenticated
-  with check (
-    char_length(body) between 1 and 4000
-    and char_length(author_name) between 1 and 80
-  );
+  with check (char_length(body) between 1 and 4000);
 
 insert into public.posts (slug, title, body)
 values (

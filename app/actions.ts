@@ -68,7 +68,6 @@ export async function createReply(
   const cookieStore = await requireGate();
   const postId = Number(formData.get("postId"));
   const body = String(formData.get("body") ?? "").trim();
-  const authorName = String(formData.get("authorName") ?? "").trim() || "Anonymous";
   const quotedText = String(formData.get("quotedText") ?? "").trim();
   const startRaw = String(formData.get("startOffset") ?? "");
   const endRaw = String(formData.get("endOffset") ?? "");
@@ -79,10 +78,6 @@ export async function createReply(
 
   if (body.length < 1 || body.length > 4000) {
     return { error: "Write a reply between 1 and 4,000 characters." };
-  }
-
-  if (authorName.length > 80) {
-    return { error: "Name is too long." };
   }
 
   const startOffset = startRaw ? Number(startRaw) : null;
@@ -98,7 +93,6 @@ export async function createReply(
   const supabase = createClient(cookieStore);
   const { error } = await supabase.from("replies").insert({
     post_id: postId,
-    author_name: authorName,
     body,
     quoted_text: hasQuote ? quotedText : null,
     start_offset: hasQuote ? startOffset : null,

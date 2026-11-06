@@ -278,11 +278,8 @@ export function Article({ post, replies }: { post: Post; replies: Reply[] }) {
           <ul className="max-h-64 space-y-3 overflow-y-auto pr-1">
             {viewReplies.map((item) => (
               <li key={item.id} className="space-y-1">
-                <p className="text-sm font-medium text-gray-1200">
-                  {item.author_name}
-                  <span className="ml-2 font-normal text-gray-1000 tabular-nums">
-                    {formatStamp(item.created_at)}
-                  </span>
+                <p className="text-sm text-gray-1000 tabular-nums">
+                  {formatStamp(item.created_at)}
                 </p>
                 <p className="text-sm leading-6 text-pretty text-gray-1100">
                   {item.body}

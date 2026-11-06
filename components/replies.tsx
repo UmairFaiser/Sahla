@@ -23,15 +23,12 @@ export function Replies({ replies }: { replies: Reply[] }) {
               {reply.quoted_text}
             </blockquote>
           ) : null}
-          <p className="text-sm font-medium text-gray-1200">
-            {reply.author_name}
-            <time
-              dateTime={reply.created_at}
-              className="ml-2 font-normal text-gray-1000 tabular-nums"
-            >
-              {formatStamp(reply.created_at)}
-            </time>
-          </p>
+          <time
+            dateTime={reply.created_at}
+            className="text-sm text-gray-1000 tabular-nums"
+          >
+            {formatStamp(reply.created_at)}
+          </time>
           <p className="mt-1 text-[0.975rem] leading-7 text-pretty text-gray-1200">
             {reply.body}
           </p>

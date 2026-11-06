@@ -9,7 +9,6 @@ export type Post = {
 export type Reply = {
   id: number;
   post_id: number;
-  author_name: string;
   body: string;
   quoted_text: string | null;
   start_offset: number | null;
